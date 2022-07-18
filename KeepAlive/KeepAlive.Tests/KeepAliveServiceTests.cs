@@ -14,7 +14,4 @@ public class KeepAliveServiceTests
     {
 
     }
-
-    [TestMethod]
-    public void TryDrawFigureEight_
 }

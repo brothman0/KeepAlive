@@ -15,8 +15,24 @@ public interface ICommonAdapter
     int Absolute(
         int value);
 
+    /// <inheritdoc cref="Math.Abs(double)"/>
+    double Absolute(
+        double value);
+
+    /// <inheritdoc cref="Convert.ToByte(double)"/>
+    byte ConvertToByte(
+        double value);
+
     /// <inheritdoc cref="Convert.ToInt32(double)"/>
     int ConvertToInt(
+        double value);
+    
+    /// <inheritdoc cref="Convert.ToInt64(double)"/>
+    long ConvertToLong(
+        double value);
+
+    /// <inheritdoc cref="Convert.ToInt16(double)"/>
+    short ConvertToShort(
         double value);
 
     /// <inheritdoc cref="Math.Floor(double)"/>

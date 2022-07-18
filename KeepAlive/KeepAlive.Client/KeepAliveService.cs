@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using KeepAlive.External;
 using Microsoft.Extensions.Hosting;
 
@@ -11,9 +12,17 @@ public class KeepAliveService : IHostedService
 {
     private const int _radius = 100;
     private const int _diameter = _radius * 2;
+    private const double _circleDegrees = 360;
+    private const double _degreeIncrement = 0.5;
+    private const double _movesPerCircle = _circleDegrees / _degreeIncrement;
+    private const int _defaultPostMoveTicks = 25000;
+    private readonly int _targetTicksPerMove;
+    private int _postMoveTicks = _defaultPostMoveTicks;
     private readonly ICommonAdapter _commonAdapter;
     private readonly ICommonAgent _commonAgent;
     private readonly IExternalAgent _externalAgent;
+
+    
 
     public bool IsRunning { get; set; } = true;
 
@@ -35,9 +44,12 @@ public class KeepAliveService : IHostedService
         ICommonAgent commonAgent,
         IExternalAgent externalAgent)
     {
+        const double targetTicksPerCircle = 20000000;
         _commonAdapter = commonAdapter;
         _commonAgent = commonAgent;
         _externalAgent = externalAgent;
+        _targetTicksPerMove = _commonAgent.RoundDownToInt(
+            targetTicksPerCircle / _movesPerCircle);
     }
 
     /// <inheritdoc cref="IHostedService.StartAsync(CancellationToken)"/>
@@ -54,7 +66,6 @@ public class KeepAliveService : IHostedService
     ///     Keeps the host machine alive by moving the cursor when it detects
     ///     inactivity.
     /// </summary>
-    [SuppressMessage("ReSharper", "FunctionNeverReturns", Justification = "Intentional.")]
     internal virtual void KeepAlive()
     {
         var (xStart, yStart) = GetStart();
@@ -138,63 +149,67 @@ public class KeepAliveService : IHostedService
         ref int xStart,
         ref int yStart)
     {
-        return TryDrawLeftHalfOfFigureEight(ref xStart, ref yStart) &&
-               TryDrawRightHalfOfFigureEight(ref xStart, ref yStart);
+        var stopWatch = _commonAdapter.StartStopwatch();
+        if (!TryDrawLeftCircle(ref xStart, ref yStart))
+            return false;
+        stopWatch.Stop();
+        Console.WriteLine(stopWatch.Elapsed.TotalSeconds);
+        stopWatch = _commonAdapter.StartStopwatch();
+        if (!TryDrawRightCircle(ref xStart, ref yStart))
+            return false;
+        stopWatch.Stop();
+        Console.WriteLine(stopWatch.Elapsed.TotalSeconds);
+        return true;
     }
 
-    internal virtual bool TryDrawLeftHalfOfFigureEight(
+    internal virtual bool TryDrawLeftCircle(
         ref int xStart,
         ref int yStart)
     {
-        const double degreeStart = 0;
-        const double degreeEnd = 360;
-        const double degreeIncrement = 0.05;
-        return TryDrawArc(
+        const double start = 0;
+        const double degreeEnd = start + _circleDegrees;
+        var result = TryDrawArc(
             ref xStart,
             ref yStart,
-            degreeStart,
+            start,
             degreeEnd,
-            degreeIncrement,
-            (x, y) => x < y,
-            -_radius);
+            true);
+        return result;
     }
 
-    internal virtual bool TryDrawRightHalfOfFigureEight(
+    internal virtual bool TryDrawRightCircle(
         ref int xStart,
         ref int yStart)
     {
         const double degreeStart = 180;
-        const double degreeEnd = -180;
-        const double degreeIncrement = -0.05;
+        const double end = degreeStart - _circleDegrees;
         return TryDrawArc(
             ref xStart,
             ref yStart,
             degreeStart,
-            degreeEnd,
-            degreeIncrement,
-            (x, y) => x > y,
-            _radius);
+            end,
+            false);
     }
-
+    
     internal virtual bool TryDrawArc(
         ref int xStart,
         ref int yStart,
         double degreeStart,
         double degreeEnd,
-        double degreeIncrement,
-        Func<double, double, bool> condition,
-        int centerOffset)
+        bool clockwise)
     {
-        for (var degree = degreeStart; condition(degree, degreeEnd); degree += degreeIncrement)
-            if (!TryMoveNext(
-                    ref xStart,
-                    ref yStart,
-                    centerOffset,
-                    degree))
+        bool condition(double x, double y) => clockwise ? x < y : x > y;
+        var increment = clockwise ? _degreeIncrement : -_degreeIncrement;
+        var centerOffset = clockwise ? -_radius : _radius;
+        for (var i = degreeStart; condition(i, degreeEnd); i += increment)
+            if (!TryMoveNext(ref xStart, ref yStart, centerOffset, i))
                 return false;
         RelocateCursor(xStart, yStart);
         return true;
+        
     }
+
+    
 
     /// <summary>
     ///     Attempt to move to the next coordinates.
@@ -217,20 +232,15 @@ public class KeepAliveService : IHostedService
         int centerOffset,
         double degree)
     {
+        var stopwatch = _commonAdapter.StartStopwatch();
         var (xCenter, yCenter) = (xStart + centerOffset, yStart);
         var (xCurrent, yCurrent) = GetCursorPosition();
         var (xNext, yNext) = GetNext(xCenter, yCenter, degree);
-        var xMove = _commonAgent.RoundDown(xNext - xCurrent);
-        var yMove = _commonAgent.RoundDown(yNext - yCurrent);
+        var xMove = _commonAgent.RoundDownToInt(xNext - xCurrent);
+        var yMove = _commonAgent.RoundDownToInt(yNext - yCurrent);
         if (_commonAgent.AbsoluteSum(xMove, yMove) < 1)
             return true;
-        if (TryMove(
-                xCurrent,
-                yCurrent,
-                xMove,
-                yMove,
-                out var xNew,
-                out var yNew))
+        if (TryMove(xMove, yMove, out var xNew, out var yNew, stopwatch))
             return true;
         (xStart, yStart) = (xNew, yNew);
         return false;
@@ -262,12 +272,6 @@ public class KeepAliveService : IHostedService
     /// <summary>
     ///     Attempt to move the cursor.
     /// </summary>
-    /// <param name="xCurrent">
-    ///     The current x coordinate of the cursor.
-    /// </param>
-    /// <param name="yCurrent">
-    ///     The current y coordinate of the cursor.
-    /// </param>
     /// <param name="xMove">
     ///     The pixels to move the cursor along the x-axis.
     /// </param>
@@ -281,31 +285,28 @@ public class KeepAliveService : IHostedService
     ///     Output of the new y coordinate of the cursor.
     /// </param>
     /// <returns>
-    ///     True if able to move the cursor and the cursor moved
-    ///     to the expected coordinates.
+    ///     True if the cursor traveled while waiting.
     /// </returns>
     /// <exception cref="ExternalException">
     ///     Thrown if unable to move the cursor.
     /// </exception>
     internal virtual bool TryMove(
-        int xCurrent,
-        int yCurrent,
         int xMove,
         int yMove,
         out int xNew,
-        out int yNew)
+        out int yNew,
+        Stopwatch stopwatch)
     {
-        const int postMoveWaitTicks = 25000;
-        var (xExpected, yExpected) = (xCurrent + xMove, yCurrent + yMove);
         if (!_externalAgent.TryMoveCursor(xMove, yMove))
             throw new ExternalException(
                 _externalAgent,
                 "Unable to move the cursor.");
+        var (xCurrent, yCurrent) = GetCursorPosition();
+        _commonAgent.Wait(_postMoveTicks);
         (xNew, yNew) = GetCursorPosition();
-        if (xExpected != xNew || yExpected != yNew)
-            return false;
-        _commonAgent.Wait(postMoveWaitTicks);
-        return true;
+        stopwatch.Stop();
+        _postMoveTicks += _targetTicksPerMove - (int)stopwatch.ElapsedTicks;
+        return !DidTravel(xCurrent, yCurrent, xNew, yNew);
     }
 
     /// <summary>

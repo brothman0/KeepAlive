@@ -10,11 +10,25 @@ public sealed class CommonAdapter : ICommonAdapter
     /// <inheritdoc cref="ICommonAdapter.Pi"/>
     public double Pi => Math.PI;
 
-    /// <inheritdoc cref="ICommonAdapter.Absolute"/>
+    /// <inheritdoc cref="ICommonAdapter.Absolute(int)"/>
     public int Absolute(
         int value)
     {
         return Math.Abs(value);
+    }
+
+    /// <inheritdoc cref="ICommonAdapter.Absolute(double)"/>
+    public double Absolute(
+        double value)
+    {
+        return Math.Abs(value);
+    }
+
+    /// <inheritdoc cref="ICommonAdapter.ConvertToByte"/>
+    public byte ConvertToByte(
+        double value)
+    {
+        return Convert.ToByte(value);
     }
 
     /// <inheritdoc cref="ICommonAdapter.ConvertToInt"/>
@@ -22,6 +36,20 @@ public sealed class CommonAdapter : ICommonAdapter
         double value)
     {
         return Convert.ToInt32(value);
+    }
+
+    /// <inheritdoc cref="ICommonAdapter.ConvertToLong"/>
+    public long ConvertToLong(
+        double value)
+    {
+        return Convert.ToInt64(value);
+    }
+
+    /// <inheritdoc cref="ICommonAdapter.ConvertToShort"/>
+    public short ConvertToShort(
+        double value)
+    {
+        return Convert.ToInt16(value);
     }
 
     /// <inheritdoc cref="ICommonAdapter.Floor"/>

@@ -1,4 +1,6 @@
-﻿namespace KeepAlive;
+﻿using System.Xml.XPath;
+
+namespace KeepAlive;
 
 /// <inheritdoc cref="ICommonAgent"/>
 public class CommonAgent : ICommonAgent
@@ -32,12 +34,36 @@ public class CommonAgent : ICommonAgent
         const double piRadian = 180;
         return _adapter.Pi * degrees / piRadian;
     }
-    
-    /// <inheritdoc cref="ICommonAgent.RoundDown"/>
-    public virtual int RoundDown(
+
+    /// <inheritdoc cref="ICommonAgent.RoundDownToByte"/>
+    public virtual byte RoundDownToByte(
+        double value)
+    {
+        return _adapter.ConvertToByte(
+            _adapter.Floor(value));
+    }
+
+    /// <inheritdoc cref="ICommonAgent.RoundDownToInt"/>
+    public virtual int RoundDownToInt(
         double value)
     {
         return _adapter.ConvertToInt(
+            _adapter.Floor(value));
+    }
+
+    /// <inheritdoc cref="ICommonAgent.RoundDownToLong"/>
+    public virtual long RoundDownToLong(
+        double value)
+    {
+        return _adapter.ConvertToLong(
+            _adapter.Floor(value));
+    }
+
+    /// <inheritdoc cref="ICommonAgent.RoundDownToShort"/>
+    public virtual short RoundDownToShort(
+        double value)
+    {
+        return _adapter.ConvertToShort(
             _adapter.Floor(value));
     }
 

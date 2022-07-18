@@ -13,5 +13,4 @@ using var host = Host.CreateDefaultBuilder(args)
                 .AddTransient<IExternalAdapter, ExternalAdapter>()
                 .AddTransient<IExternalAgent, ExternalAgent>())
     .Build();
-
 await host.RunAsync();
