@@ -7,20 +7,16 @@ public struct MonitorInfo
 {
     public uint Size = (uint)Marshal.SizeOf<MonitorInfo>();
 
-    public Rectangle Monitor;
+    public Rectangle Monitor = new();
 
-    public Rectangle WorkArea;
+    public Rectangle WorkArea = new();
 
-    public uint Flags;
+    public uint Flags = 0;
 
     [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
-    public string DeviceName;
-}
+    public string? DeviceName = null;
 
-public struct Rectangle
-{
-    public int Left;
-    public int Top;
-    public int Right;
-    public int Bottom;
+    public MonitorInfo()
+    {
+    }
 }
