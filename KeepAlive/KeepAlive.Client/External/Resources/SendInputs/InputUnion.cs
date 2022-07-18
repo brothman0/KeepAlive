@@ -26,4 +26,8 @@ public struct InputUnion
     /// </summary>
     [FieldOffset(0)]
     public HardwareInput HardwareInput = new();
+
+    public InputUnion()
+    {
+    }
 }

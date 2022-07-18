@@ -9,6 +9,7 @@ namespace KeepAlive.External.Resources.SendInputs;
 [StructLayout(LayoutKind.Sequential)]
 public struct Input
 {
+    
     /// <summary>
     ///     The type of input.
     /// </summary>
@@ -19,6 +20,24 @@ public struct Input
     ///     and <see cref="HardwareInput"/>.
     /// </summary>
     public InputUnion Union = new();
+
+    public MouseInput MouseInput
+    {
+        get => Union.MouseInput;
+        set => Union.MouseInput = value;
+    }
+
+    public KeyboardInput KeyboardInput
+    {
+        get => Union.KeyboardInput;
+        set => Union.KeyboardInput = value;
+    }
+
+    public HardwareInput HardwareInput
+    {
+        get => Union.HardwareInput;
+        set => Union.HardwareInput = value;
+    }
 
     /// <summary>
     ///     Initializes a new instance of <see cref="Input"/> used
@@ -36,7 +55,6 @@ public struct Input
     {
         Type = InputType.Mouse;
         var extraInfo = adapter.GetMessageExtraInfo();
-        Union.MouseInput = 
-            new MouseInput(xInput, yInput, flags, extraInfo);
+        MouseInput = new MouseInput(xInput, yInput, flags, extraInfo);
     }
 }
