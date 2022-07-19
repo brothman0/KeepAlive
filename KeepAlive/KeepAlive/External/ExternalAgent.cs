@@ -1,16 +1,20 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Text;
-using KeepAlive.Client.External.Resources.FormatMessage;
-using KeepAlive.Client.External.Resources.GetSystemMetric;
-using KeepAlive.Client.External.Resources.SendInputs;
+using KeepAlive.External.Resources.FormatMessage;
+using KeepAlive.External.Resources.GetSystemMetric;
+using KeepAlive.External.Resources.GetMonitorFromPoint;
+using KeepAlive.External.Resources.SendInputs;
+using KeepAlive.External.Resources.TryGetCursorPosition;
+using KeepAlive.External.Resources.TryGetMonitorInfo;
 
-namespace KeepAlive.Client.External;
+namespace KeepAlive.External;
 
 /// <inheritdoc cref="IExternalAgent"/>
 public class ExternalAgent : IExternalAgent
 {
-    private readonly IExternalAdapter _adapter;
+    internal readonly IExternalAdapter _adapter;
+    internal const int _absoluteReference = 65536;
 
     /// <summary>
     ///     Initializes a new instance of <see cref="ExternalAgent"/>.
@@ -28,7 +32,7 @@ public class ExternalAgent : IExternalAgent
     public virtual string? GetErrorMessage()
     {
         const int bufferCapacity = 512;
-        var messageId = Marshal.GetLastWin32Error();
+        var messageId = _adapter.GetLastWin32Error();
         var buffer = new StringBuilder(bufferCapacity);
         return FormatMessage(messageId, buffer) == 0 ?
             null :
@@ -48,6 +52,7 @@ public class ExternalAgent : IExternalAgent
     /// <returns>
     ///     The number of characters written to <paramref name="buffer"/>.
     /// </returns>
+    [ExcludeFromCodeCoverage(Justification = "Methods without logic do not require coverage.")]
     internal virtual uint FormatMessage(
         int messageId,
         StringBuilder buffer)
@@ -64,7 +69,7 @@ public class ExternalAgent : IExternalAgent
     }
 
     /// <inheritdoc cref="IExternalAgent.TryGetCursorPosition"/>
-    public bool TryGetCursorPosition(
+    public virtual bool TryGetCursorPosition(
         [NotNullWhen(true)]
         out int? xPosition,
         [NotNullWhen(true)]
@@ -79,19 +84,63 @@ public class ExternalAgent : IExternalAgent
         return true;
     }
 
+    /// <inheritdoc cref="IExternalAgent.TryGetCursorWorkArea"/>
+    public virtual bool TryGetCursorWorkArea(
+        int xPosition,
+        int yPosition,
+        out Rectangle workArea)
+    {
+        workArea = new Rectangle();
+        var monitorHandle = GetMonitorHandleFromPosition(
+            xPosition,
+            yPosition);
+        var monitorInfo = new MonitorInfo(
+            (uint)_adapter.SizeOf<MonitorInfo>());
+        if (!_adapter.TryGetMonitorInfo(monitorHandle, ref monitorInfo))
+            return false;
+        workArea = monitorInfo.WorkArea;
+        return true;
+    }
+
+    /// <summary>
+    ///     Gets the monitor handle from the position.
+    /// </summary>
+    /// <param name="xPosition">
+    ///     The x-axis coordinate to find the monitor from.
+    /// </param>
+    /// <param name="yPosition">
+    ///     The y-axis coordiante to find the monitor from.
+    /// </param>
+    /// <returns>
+    ///     The monitor handle of either the position that is within the
+    ///     bounds of the monitor, or the nearest monitor.
+    /// </returns>
+    [ExcludeFromCodeCoverage(Justification = "Methods without logic do not require coverage.")]
+    internal virtual IntPtr GetMonitorHandleFromPosition(
+        int xPosition,
+        int yPosition)
+    {
+        const MonitorFromPointFlag flags = MonitorFromPointFlag.DefaultToNearest;
+        var position = new Position(xPosition, yPosition);
+        return _adapter.GetMonitorFromPosition(
+            position,
+            flags);
+    }
+
     /// <inheritdoc cref="IExternalAgent.TryMoveCursor"/>
-    public bool TryMoveCursor(
+    public virtual bool TryMoveCursor(
         int xMove, 
         int yMove)
     {
         const MouseEventFlag flags = MouseEventFlag.Move;
         const int expectedResponse = 1;
-        var input = new Input(xMove, yMove, flags, _adapter);
+        var extraInfo = _adapter.GetMessageExtraInfo();
+        var input = new Input(xMove, yMove, flags, extraInfo);
         return SendInput(input) == expectedResponse;
     }
 
     /// <inheritdoc cref="IExternalAgent.TryRelocateCursor"/>
-    public bool TryRelocateCursor(
+    public virtual bool TryRelocateCursor(
         int xPosition,
         int yPosition)
     {
@@ -99,7 +148,8 @@ public class ExternalAgent : IExternalAgent
         const int expectedResponse = 1;
         if (!TryGetAbsolutePosition(ref xPosition, ref yPosition))
             return false;
-        var input = new Input(xPosition, yPosition, flags, _adapter);
+        var extraInfo = _adapter.GetMessageExtraInfo();
+        var input = new Input(xPosition, yPosition, flags, extraInfo);
         return SendInput(input) == expectedResponse;
     }
     
@@ -123,12 +173,11 @@ public class ExternalAgent : IExternalAgent
         ref int xPosition,
         ref int yPosition)
     {
-        const int absoluteReference = 65536;
         if (!TryGetScreenWidth(out var screenWidth) ||
             !TryGetScreenHeight(out var screenHeight))
             return false;
-        xPosition = xPosition * absoluteReference / screenWidth;
-        yPosition = yPosition * absoluteReference / screenHeight;
+        xPosition = xPosition * _absoluteReference / screenWidth;
+        yPosition = yPosition * _absoluteReference / screenHeight;
         return true;
     }
 
@@ -176,6 +225,7 @@ public class ExternalAgent : IExternalAgent
     /// <returns>
     ///     The number of inputs processed.
     /// </returns>
+    [ExcludeFromCodeCoverage(Justification = "Methods without logic do not require coverage.")]
     internal virtual uint SendInput(
         Input input)
     {
@@ -190,12 +240,13 @@ public class ExternalAgent : IExternalAgent
     ///     The inputs to send.
     /// </param>
     /// <inheritdoc cref="SendInput(Input)"/>
+    [ExcludeFromCodeCoverage(Justification = "Methods without logic do not require coverage.")]
     internal virtual uint SendInputs(
         Input[] inputs)
     {
         return _adapter.SendInputs(
             (uint)inputs.Length,
             inputs,
-            Marshal.SizeOf<Input>());
+            _adapter.SizeOf<Input>());
     }
 }

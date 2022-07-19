@@ -1,4 +1,4 @@
-﻿namespace KeepAlive.Client.External.Resources.SendInputs;
+﻿namespace KeepAlive.External.Resources.SendInputs;
 
 /// <summary>
 ///     Indicates the type of event.

@@ -1,4 +1,4 @@
-﻿namespace KeepAlive.Client.External.Resources.SendInputs;
+﻿namespace KeepAlive.External.Resources.SendInputs;
 
 /// <summary>
 ///     Hardware scan codes for keys.

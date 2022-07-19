@@ -1,14 +1,17 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 
-namespace KeepAlive.Client.External.Resources.SendInputs;
+namespace KeepAlive.External.Resources.SendInputs;
 
 /// <summary>
 ///     Contains information about a simulated mouse, keyboard, or
 ///     hardware event.
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
+[ExcludeFromCodeCoverage(Justification = "Structs with no logic do not require coverage.")]
 public struct Input
 {
+    
     /// <summary>
     ///     The type of input.
     /// </summary>
@@ -20,23 +23,36 @@ public struct Input
     /// </summary>
     public InputUnion Union = new();
 
+    public MouseInput MouseInput
+    {
+        get => Union.MouseInput;
+        set => Union.MouseInput = value;
+    }
+
+    public KeyboardInput KeyboardInput
+    {
+        get => Union.KeyboardInput;
+        set => Union.KeyboardInput = value;
+    }
+
+    public HardwareInput HardwareInput
+    {
+        get => Union.HardwareInput;
+        set => Union.HardwareInput = value;
+    }
+
     /// <summary>
     ///     Initializes a new instance of <see cref="Input"/> used
     ///     to move the cursor.
     /// </summary>
-    /// <param name="adapter">
-    ///     Adapter used to make external calls.
-    /// </param>
-    /// <inheritdoc cref="MouseInput(int, int, MouseEventFlag, UIntPtr)"/>
+    /// <inheritdoc cref="MouseInput.MouseInput(int, int, MouseEventFlag, UIntPtr)"/>
     public Input(
         int xInput,
         int yInput,
         MouseEventFlag flags,
-        IExternalAdapter adapter)
+        UIntPtr extraInfo)
     {
         Type = InputType.Mouse;
-        var extraInfo = adapter.GetMessageExtraInfo();
-        Union.MouseInput = 
-            new MouseInput(xInput, yInput, flags, extraInfo);
+        MouseInput = new MouseInput(xInput, yInput, flags, extraInfo);
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace KeepAlive.Client;
+﻿using System;
+
+namespace KeepAlive;
 
 /// <summary>
 ///     Used as a agent for common methods.
@@ -28,18 +30,51 @@ public interface ICommonAgent
     /// </returns>
     double ConvertToRadian(
         double degrees);
-    
+
+    /// <summary>
+    ///     Rounds <paramref name="value"/> down and converts to
+    ///     <see cref="byte"/>.
+    /// </summary>
+    /// <param name="value">
+    ///     The value to round down and convert.
+    /// </param>
+    /// <returns>
+    ///     <paramref name="value"/> rounded down as <see cref="byte"/>.
+    /// </returns>
+    byte RoundDownToByte(
+        double value);
+
     /// <summary>
     ///     Rounds <paramref name="value"/> down and converts to
     ///     <see cref="int"/>.
     /// </summary>
-    /// <param name="value">
-    ///     The value to round down.
-    /// </param>
     /// <returns>
-    ///     <paramref name="value"/> rounded down as an <see cref="int"/>.
+    ///     <paramref name="value"/> rounded down as <see cref="int"/>.
     /// </returns>
-    int RoundDown(
+    /// <inheritdoc cref="RoundDownToByte"/>
+    int RoundDownToInt(
+        double value);
+
+    /// <summary>
+    ///     Rounds <paramref name="value"/> down and converts to
+    ///     <see cref="long"/>.
+    /// </summary>
+    /// <returns>
+    ///     <paramref name="value"/> rounded down as <see cref="long"/>.
+    /// </returns>
+    /// <inheritdoc cref="RoundDownToByte"/>
+    long RoundDownToLong(
+        double value);
+
+    /// <summary>
+    ///     Rounds <paramref name="value"/> down and converts to
+    ///     <see cref="short"/>.
+    /// </summary>
+    /// <returns>
+    ///     <paramref name="value"/> rounded down as <see cref="short"/>.
+    /// </returns>
+    /// <inheritdoc cref="RoundDownToByte"/>
+    short RoundDownToShort(
         double value);
 
     /// <summary>

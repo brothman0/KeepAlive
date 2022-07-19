@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using KeepAlive.External.Resources.TryGetMonitorInfo;
 
-namespace KeepAlive.Client.External;
+namespace KeepAlive.External;
 
 /// <summary>
 ///     Agent used to translate external calls into a more convenient API.
@@ -32,6 +33,26 @@ public interface IExternalAgent
         out int? xPosition,
         [NotNullWhen(true)]
         out int? yPosition);
+
+    /// <summary>
+    ///     Attempt to get the work area for the active monitor.
+    /// </summary>
+    /// <param name="xPosition">
+    ///     The position of the cursor on the x-axis.
+    /// </param>
+    /// <param name="yPosition">
+    ///     The position of the cursor on the y-axis.
+    /// </param>
+    /// <param name="workArea">
+    ///     Output of the work area that can be used for the cursor.
+    /// </param>
+    /// <returns>
+    ///     True if able to get the work area for the active monitor.
+    /// </returns>
+    bool TryGetCursorWorkArea(
+        int xPosition,
+        int yPosition,
+        out Rectangle workArea);
 
     /// <summary>
     ///     Attempt to move the cursor.

@@ -1,6 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System.Diagnostics.CodeAnalysis;
 
-namespace KeepAlive.Client;
+namespace KeepAlive;
 
 /// <inheritdoc cref="ICommonAgent"/>
 public class CommonAgent : ICommonAgent
@@ -14,6 +14,7 @@ public class CommonAgent : ICommonAgent
     ///     common adapter for non-mockable instance or static
     ///     methods.
     /// </param>
+    [ExcludeFromCodeCoverage(Justification = "Constructors with no logic do not require coverage.")]
     public CommonAgent(
         ICommonAdapter adapter)
     {
@@ -21,6 +22,7 @@ public class CommonAgent : ICommonAgent
     }
 
     /// <inheritdoc cref="ICommonAgent.AbsoluteSum"/>
+    [ExcludeFromCodeCoverage(Justification = "Methods without logic do not require coverage.")]
     public virtual int AbsoluteSum(
         params int[] values)
     {
@@ -28,6 +30,7 @@ public class CommonAgent : ICommonAgent
     }
 
     /// <inheritdoc cref="ICommonAgent.ConvertToRadian"/>
+    [ExcludeFromCodeCoverage(Justification = "Methods without logic do not require coverage.")]
     public virtual double ConvertToRadian(
         double degrees)
     {
@@ -35,15 +38,44 @@ public class CommonAgent : ICommonAgent
         return _adapter.Pi * degrees / piRadian;
     }
 
-    /// <inheritdoc cref="ICommonAgent.RoundDown"/>
-    public virtual int RoundDown(
+    /// <inheritdoc cref="ICommonAgent.RoundDownToByte"/>
+    [ExcludeFromCodeCoverage(Justification = "Methods without logic do not require coverage.")]
+    public virtual byte RoundDownToByte(
+        double value)
+    {
+        return _adapter.ConvertToByte(
+            _adapter.Floor(value));
+    }
+
+    /// <inheritdoc cref="ICommonAgent.RoundDownToInt"/>
+    [ExcludeFromCodeCoverage(Justification = "Methods without logic do not require coverage.")]
+    public virtual int RoundDownToInt(
         double value)
     {
         return _adapter.ConvertToInt(
             _adapter.Floor(value));
     }
 
+    /// <inheritdoc cref="ICommonAgent.RoundDownToLong"/>
+    [ExcludeFromCodeCoverage(Justification = "Methods without logic do not require coverage.")]
+    public virtual long RoundDownToLong(
+        double value)
+    {
+        return _adapter.ConvertToLong(
+            _adapter.Floor(value));
+    }
+
+    /// <inheritdoc cref="ICommonAgent.RoundDownToShort"/>
+    [ExcludeFromCodeCoverage(Justification = "Methods without logic do not require coverage.")]
+    public virtual short RoundDownToShort(
+        double value)
+    {
+        return _adapter.ConvertToShort(
+            _adapter.Floor(value));
+    }
+
     /// <inheritdoc cref="ICommonAgent.Wait(long)"/>
+    [ExcludeFromCodeCoverage(Justification = "Methods without logic do not require coverage.")]
     public virtual void Wait(
         long ticks)
     {
@@ -54,9 +86,13 @@ public class CommonAgent : ICommonAgent
     }
     
     /// <inheritdoc cref="ICommonAgent.Wait(TimeSpan)"/>
+    [ExcludeFromCodeCoverage(Justification = "Methods without logic do not require coverage.")]
     public virtual void Wait(
         TimeSpan waitTime)
     {
-        Wait(waitTime.Ticks);
+        var stopwatch = _adapter.StartStopwatch();
+        while (stopwatch.Elapsed < waitTime)
+        {
+        }
     }
 }
