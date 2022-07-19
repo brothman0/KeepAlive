@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 
 namespace KeepAlive.External.Resources.SendInputs;
 
@@ -7,6 +8,7 @@ namespace KeepAlive.External.Resources.SendInputs;
 ///     and <see cref="HardwareInput"/>.
 /// </summary>
 [StructLayout(LayoutKind.Explicit)]
+[ExcludeFromCodeCoverage(Justification = "Structs with no logic do not require coverage.")]
 public struct InputUnion
 {
     /// <summary>

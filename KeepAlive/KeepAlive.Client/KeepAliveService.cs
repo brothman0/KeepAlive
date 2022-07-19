@@ -24,7 +24,8 @@ public class KeepAliveService : IHostedService
     internal const int _activityChecks = 6;
     internal int _postMoveTicks = 25000;
 
-    public bool IsRunning { get; set; } = true;
+    [ExcludeFromCodeCoverage(Justification = "Auto properties do not require coverage.")]
+    public virtual bool IsRunning { get; set; } = true;
 
     /// <summary>
     ///     Initializes a new instance of <see cref="KeepAliveService"/>
@@ -332,7 +333,7 @@ public class KeepAliveService : IHostedService
         int yMove,
         out int xNew,
         out int yNew,
-        Stopwatch stopwatch)
+        IStopwatch stopwatch)
     {
         if (!_externalAgent.TryMoveCursor(xMove, yMove))
             throw new ExternalException(
@@ -390,9 +391,8 @@ public class KeepAliveService : IHostedService
             _commonAgent.Wait(activityWait);
             var (xCurrent, yCurrent) = GetCursorPosition();
             if (DidTravel(xStart, yStart, xCurrent, yCurrent))
-                checks = 0;
-            xStart = xCurrent;
-            yStart = yCurrent;
+                checks = -1;
+            (xStart, yStart) = (xCurrent, yCurrent);
         }
     }
 
@@ -428,7 +428,7 @@ public class KeepAliveService : IHostedService
     /// <exception cref="ExternalException">
     ///     Thrown if unable to get the cursor position.
     /// </exception>
-    internal virtual (int, int) GetCursorPosition()
+    internal virtual (int xPosition, int yPosition) GetCursorPosition()
     {
         if (!_externalAgent.TryGetCursorPosition(
                 out var xPosition,

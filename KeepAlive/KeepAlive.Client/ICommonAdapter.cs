@@ -43,6 +43,6 @@ public interface ICommonAdapter
     (double sine, double cosine) SineCosine(
         double x);
 
-    /// <inheritdoc cref="Stopwatch.StartNew"/>
-    Stopwatch StartStopwatch();
+    /// <inheritdoc cref="System.Diagnostics.Stopwatch.StartNew"/>
+    IStopwatch StartStopwatch();
 }

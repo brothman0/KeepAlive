@@ -1,4 +1,4 @@
-﻿namespace KeepAlive.Client.External.Resources.FormatMessage;
+﻿namespace KeepAlive.External.Resources.FormatMessage;
 
 /// <summary>
 ///     Indicates options to use when formatting a message.

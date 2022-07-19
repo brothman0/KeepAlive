@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace KeepAlive;
 
@@ -67,9 +65,9 @@ public sealed class CommonAdapter : ICommonAdapter
         return Math.SinCos(x);
     }
 
-    /// <inheritdoc cref="ICommonAdapter.Stopwatch"/>
-    public Stopwatch StartStopwatch()
+    /// <inheritdoc cref="ICommonAdapter.StartStopwatch"/>
+    public IStopwatch StartStopwatch()
     {
-        return Stopwatch.StartNew();
+        return new Stopwatch();
     }
 }

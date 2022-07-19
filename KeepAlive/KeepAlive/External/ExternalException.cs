@@ -1,4 +1,4 @@
-﻿namespace KeepAlive.Client.External;
+﻿namespace KeepAlive.External;
 
 /// <summary>
 ///     Represents errors that occur while calling external

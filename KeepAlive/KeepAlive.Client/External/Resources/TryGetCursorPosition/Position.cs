@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 
 namespace KeepAlive.External.Resources.TryGetCursorPosition;
 
@@ -6,6 +7,7 @@ namespace KeepAlive.External.Resources.TryGetCursorPosition;
 ///     Used to indicate the position of the cursor.
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
+[ExcludeFromCodeCoverage(Justification = "Structs with no logic do not require coverage.")]
 public struct Position
 {
     /// <summary>

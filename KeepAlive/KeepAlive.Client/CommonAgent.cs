@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.Xml.XPath;
 
 namespace KeepAlive;
 
@@ -15,6 +14,7 @@ public class CommonAgent : ICommonAgent
     ///     common adapter for non-mockable instance or static
     ///     methods.
     /// </param>
+    [ExcludeFromCodeCoverage(Justification = "Constructors with no logic do not require coverage.")]
     public CommonAgent(
         ICommonAdapter adapter)
     {

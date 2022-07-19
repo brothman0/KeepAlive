@@ -1,4 +1,4 @@
-﻿namespace KeepAlive.Client.External.Resources.GetSystemMetric;
+﻿namespace KeepAlive.External.Resources.GetSystemMetric;
 
 /// <summary>
 ///     System settings.

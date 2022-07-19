@@ -1,12 +1,14 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 
-namespace KeepAlive.Client.External.Resources.SendInputs;
+namespace KeepAlive.External.Resources.SendInputs;
 
 /// <summary>
 ///     Union of <see cref="MouseInput"/>, <see cref="KeyboardInput"/>,
 ///     and <see cref="HardwareInput"/>.
 /// </summary>
 [StructLayout(LayoutKind.Explicit)]
+[ExcludeFromCodeCoverage(Justification = "Structs with no logic do not require coverage.")]
 public struct InputUnion
 {
     /// <summary>
@@ -26,4 +28,8 @@ public struct InputUnion
     /// </summary>
     [FieldOffset(0)]
     public HardwareInput HardwareInput = new();
+
+    public InputUnion()
+    {
+    }
 }

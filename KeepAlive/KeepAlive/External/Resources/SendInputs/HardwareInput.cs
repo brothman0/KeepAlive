@@ -1,11 +1,13 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 
-namespace KeepAlive.Client.External.Resources.SendInputs;
+namespace KeepAlive.External.Resources.SendInputs;
 
 /// <summary>
 ///     Contains information about a simulated hardware event.
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
+[ExcludeFromCodeCoverage(Justification = "Structs with no logic do not require coverage.")]
 public struct HardwareInput
 {
     /// <summary>

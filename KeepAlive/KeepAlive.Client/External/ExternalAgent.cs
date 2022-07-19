@@ -13,7 +13,8 @@ namespace KeepAlive.External;
 /// <inheritdoc cref="IExternalAgent"/>
 public class ExternalAgent : IExternalAgent
 {
-    private readonly IExternalAdapter _adapter;
+    internal readonly IExternalAdapter _adapter;
+    internal const int _absoluteReference = 65536;
 
     /// <summary>
     ///     Initializes a new instance of <see cref="ExternalAgent"/>.
@@ -133,7 +134,8 @@ public class ExternalAgent : IExternalAgent
     {
         const MouseEventFlag flags = MouseEventFlag.Move;
         const int expectedResponse = 1;
-        var input = new Input(xMove, yMove, flags, _adapter);
+        var extraInfo = _adapter.GetMessageExtraInfo();
+        var input = new Input(xMove, yMove, flags, extraInfo);
         return SendInput(input) == expectedResponse;
     }
 
@@ -146,7 +148,8 @@ public class ExternalAgent : IExternalAgent
         const int expectedResponse = 1;
         if (!TryGetAbsolutePosition(ref xPosition, ref yPosition))
             return false;
-        var input = new Input(xPosition, yPosition, flags, _adapter);
+        var extraInfo = _adapter.GetMessageExtraInfo();
+        var input = new Input(xPosition, yPosition, flags, extraInfo);
         return SendInput(input) == expectedResponse;
     }
     
@@ -170,12 +173,11 @@ public class ExternalAgent : IExternalAgent
         ref int xPosition,
         ref int yPosition)
     {
-        const int absoluteReference = 65536;
         if (!TryGetScreenWidth(out var screenWidth) ||
             !TryGetScreenHeight(out var screenHeight))
             return false;
-        xPosition = xPosition * absoluteReference / screenWidth;
-        yPosition = yPosition * absoluteReference / screenHeight;
+        xPosition = xPosition * _absoluteReference / screenWidth;
+        yPosition = yPosition * _absoluteReference / screenHeight;
         return true;
     }
 

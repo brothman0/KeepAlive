@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31912.275
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KeepAlive", "KeepAlive.Client\KeepAlive.csproj", "{76CB8284-8CB2-49CE-8FA4-E7EFA4B76749}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KeepAlive", "KeepAlive\KeepAlive.csproj", "{76CB8284-8CB2-49CE-8FA4-E7EFA4B76749}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C63AF307-4A7C-4C49-9C19-FC636BF6F86F}"
 	ProjectSection(SolutionItems) = preProject

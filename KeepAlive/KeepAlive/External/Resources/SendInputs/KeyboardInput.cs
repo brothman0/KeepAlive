@@ -1,27 +1,29 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 
-namespace KeepAlive.Client.External.Resources.SendInputs;
+namespace KeepAlive.External.Resources.SendInputs;
 
 /// <summary>
 ///     Contains information about a simulated keyboard event.
 /// </summary>
 [StructLayout(LayoutKind.Sequential)]
+[ExcludeFromCodeCoverage(Justification = "Structs with no logic do not require coverage.")]
 public struct KeyboardInput
 {
     /// <summary>
     ///     Input used for non-unicode.
     /// </summary>
-    public KeyInput KeyInput;
+    public KeyInput KeyInput = default;
 
     /// <summary>
     ///     Input used for unicode.
     /// </summary>
-    public ScanCode ScanCode;
+    public ScanCode ScanCode = default;
 
     /// <summary>
     ///     Flags describing the keyboard event enact.
     /// </summary>
-    public KeyEventFlag Flag;
+    public KeyEventFlag Flag = default;
 
     /// <summary>
     ///     The timestamp for the event.
@@ -31,5 +33,9 @@ public struct KeyboardInput
     /// <summary>
     ///     Extra message information for the current thread.
     /// </summary>
-    public UIntPtr ExtraInfo;
+    public UIntPtr ExtraInfo = UIntPtr.Zero;
+
+    public KeyboardInput()
+    {
+    }
 }
