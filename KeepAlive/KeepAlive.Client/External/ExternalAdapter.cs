@@ -34,12 +34,19 @@ public sealed class ExternalAdapter : IExternalAdapter
             arguments);
     }
 
+    /// <inheritdoc cref="IExternalAdapter.GetLastWin32Error"/>
+    public int GetLastWin32Error()
+    {
+        return Marshal.GetLastWin32Error();
+    }
+
     /// <inheritdoc cref="IExternalAdapter.GetMessageExtraInfo"/>
     public UIntPtr GetMessageExtraInfo()
     {
         return ExternalGetMessageExtraInfo();
     }
 
+    /// <inheritdoc cref="IExternalAdapter.GetMonitorFromPosition"/>
     public IntPtr GetMonitorFromPosition(
         Position position,
         MonitorFromPointFlag flags)
@@ -68,7 +75,13 @@ public sealed class ExternalAdapter : IExternalAdapter
             inputs, 
             inputSize);
     }
-    
+
+    /// <inheritdoc cref="IExternalAdapter.SizeOf{T}()"/>
+    public int SizeOf<T>()
+    {
+        return Marshal.SizeOf<T>();
+    }
+
     /// <inheritdoc cref="IExternalAdapter.TryGetCursorPosition"/>
     public bool TryGetCursorPosition(
         out Position position)
@@ -77,6 +90,7 @@ public sealed class ExternalAdapter : IExternalAdapter
             out position);
     }
 
+    /// <inheritdoc cref="IExternalAdapter.TryGetMonitorInfo"/>
     public bool TryGetMonitorInfo(
         IntPtr monitorHandle,
         ref MonitorInfo monitorInfo)
@@ -101,6 +115,7 @@ public sealed class ExternalAdapter : IExternalAdapter
     [DllImport("user32.dll", EntryPoint = "GetMessageExtraInfo")]
     private static extern UIntPtr ExternalGetMessageExtraInfo();
 
+    /// <inheritdoc cref="IExternalAdapter.GetMonitorFromPosition"/>
     [DllImport("user32.dll", SetLastError = true, EntryPoint = "MonitorFromPoint")]
     private static extern IntPtr ExternalGetMonitorFromPosition(
         Position position,
@@ -124,6 +139,7 @@ public sealed class ExternalAdapter : IExternalAdapter
     private static extern bool ExternalTryGetCursorPosition(
         out Position position);
 
+    /// <inheritdoc cref="IExternalAdapter.TryGetMonitorInfo"/>
     [DllImport("user32.dll", SetLastError = true, EntryPoint = "GetMonitorInfoW")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool ExternalTryGetMonitorInfo(

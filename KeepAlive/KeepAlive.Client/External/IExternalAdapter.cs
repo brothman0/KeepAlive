@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Runtime.InteropServices;
 using KeepAlive.External.Resources.FormatMessage;
 using KeepAlive.External.Resources.GetSystemMetric;
 using KeepAlive.External.Resources.GetMonitorFromPoint;
@@ -48,7 +49,10 @@ public interface IExternalAdapter
         StringBuilder buffer,
         int size,
         IntPtr arguments);
-    
+
+    /// <inheritdoc cref="Marshal.GetLastWin32Error()"/>
+    int GetLastWin32Error();
+
     /// <summary>
     ///     Gets the extra message information for the current thread.
     /// </summary>
@@ -57,6 +61,19 @@ public interface IExternalAdapter
     /// </returns>
     UIntPtr GetMessageExtraInfo();
 
+    /// <summary>
+    ///     Gets the monitor handle from <paramref name="position"/>.
+    /// </summary>
+    /// <param name="position">
+    ///     The position to get the monitor handle for.
+    /// </param>
+    /// <param name="flags">
+    ///     Flags that define what handle to return if a monitor is not
+    ///     found that contains <paramref name="position"/>.
+    /// </param>
+    /// <returns>
+    ///     The monitor handle from <paramref name="position"/>.
+    /// </returns>
     IntPtr GetMonitorFromPosition(
         Position position,
         MonitorFromPointFlag flags);
@@ -96,6 +113,9 @@ public interface IExternalAdapter
         Input[] inputs,
         int inputSize);
 
+    /// <inheritdoc cref="Marshal.SizeOf{T}()"/>
+    int SizeOf<T>();
+
     /// <summary>
     ///     Attempt to get the cursor position.
     /// </summary>
@@ -108,6 +128,17 @@ public interface IExternalAdapter
     bool TryGetCursorPosition(
         out Position position);
 
+    /// <summary>
+    ///     Attempt to get the monitor info for <paramref name="monitorHandle"/>.
+    /// </summary>
+    /// <param name="monitorHandle">
+    ///     The handle of the monitor to get the info for.
+    /// </param>
+    /// <param name="monitorInfo">
+    ///     Output of the monitor info for the monitor with a handle of
+    ///     <paramref name="monitorHandle"/>.
+    /// </param>
+    /// <returns></returns>
     bool TryGetMonitorInfo(
         IntPtr monitorHandle,
         ref MonitorInfo monitorInfo);

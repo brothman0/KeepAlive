@@ -10,19 +10,19 @@ namespace KeepAlive;
 /// </summary>
 public class KeepAliveService : IHostedService
 {
-    private const int _radius = 100;
-    private const int _diameter = _radius * 2;
-    private const double _circleDegrees = 360;
-    private const double _degreeIncrement = 0.5;
-    private const double _movesPerCircle = _circleDegrees / _degreeIncrement;
-    private const int _defaultPostMoveTicks = 25000;
-    private readonly int _targetTicksPerMove;
-    private int _postMoveTicks = _defaultPostMoveTicks;
-    private readonly ICommonAdapter _commonAdapter;
-    private readonly ICommonAgent _commonAgent;
-    private readonly IExternalAgent _externalAgent;
-
-    
+    internal readonly ICommonAdapter _commonAdapter;
+    internal readonly ICommonAgent _commonAgent;
+    internal readonly IExternalAgent _externalAgent;
+    internal const int _radius = 100;
+    internal const int _diameter = _radius * 2;
+    internal const double _circleDegrees = 360;
+    internal const double _degreeIncrement = 0.5;
+    internal const double _movesPerCircle = _circleDegrees / _degreeIncrement;
+    internal const int _targetTicksPerCircle = 20000000;
+    internal const int _targetTicksPerMove = _targetTicksPerCircle / (int)_movesPerCircle;
+    internal const int _activityWaitSeconds = 5;
+    internal const int _activityChecks = 6;
+    internal int _postMoveTicks = 25000;
 
     public bool IsRunning { get; set; } = true;
 
@@ -44,12 +44,9 @@ public class KeepAliveService : IHostedService
         ICommonAgent commonAgent,
         IExternalAgent externalAgent)
     {
-        const double targetTicksPerCircle = 20000000;
         _commonAdapter = commonAdapter;
         _commonAgent = commonAgent;
         _externalAgent = externalAgent;
-        _targetTicksPerMove = _commonAgent.RoundDownToInt(
-            targetTicksPerCircle / _movesPerCircle);
     }
 
     /// <inheritdoc cref="IHostedService.StartAsync(CancellationToken)"/>
@@ -95,6 +92,21 @@ public class KeepAliveService : IHostedService
         return (xStart, yStart);
     }
 
+    /// <summary>
+    ///     Gets the work area for the monitor the cursor is in.
+    /// </summary>
+    /// <param name="xPosition">
+    ///     The coordinate of the cursor along the x-axis.
+    /// </param>
+    /// <param name="yPosition">
+    ///     The coordinate of the cursor along the y-axis.
+    /// </param>
+    /// <returns>
+    ///     The work area for the monitor the cursor is in.
+    /// </returns>
+    /// <exception cref="ExternalException">
+    ///     Thrown if unable to get the cursor work area.
+    /// </exception>
     internal virtual (int left, int top, int right, int bottom) GetCursorWorkArea(
         int xPosition,
         int yPosition)
@@ -109,6 +121,25 @@ public class KeepAliveService : IHostedService
         return (workArea.Left, workArea.Top, workArea.Right, workArea.Bottom);
     }
 
+    /// <summary>
+    ///     Gets the starting position of the cursor along the x-axis such that
+    ///     the cursor will not intersect the bounds of the work area when drawing
+    ///     the figure eight.
+    /// </summary>
+    /// <param name="xCurrent">
+    ///     The current position of the cursor along the x-axis.
+    /// </param>
+    /// <param name="left">
+    ///     The coordinate along the x-axis that describes the left bound of the
+    ///     work area.
+    /// </param>
+    /// <param name="right">
+    ///     The coordinate along the x-axis that describes the right bound of the
+    ///     work area.
+    /// </param>
+    /// <returns>
+    ///     The starting position along the x-axis for the figure eight.
+    /// </returns>
     internal virtual int GetXStart(
         int xCurrent,
         int left,
@@ -121,6 +152,25 @@ public class KeepAliveService : IHostedService
         return xCurrent;
     }
 
+    /// <summary>
+    ///     Gets the starting position of the cursor along the y-axis such that
+    ///     the cursor will not intersect the bounds of the work area when drawing
+    ///     the figure eight.
+    /// </summary>
+    /// <param name="yCurrent">
+    ///     The current position of the cursor along the y-axis.
+    /// </param>
+    /// <param name="top">
+    ///     The coordinate along the y-axis that describes the top bound of the
+    ///     work area.
+    /// </param>
+    /// <param name="bottom">
+    ///     The coordinate along the y-axis that describes the bottom bound of the
+    ///     work area.
+    /// </param>
+    /// <returns>
+    ///     The starting position along the y-axis for the figure eight.
+    /// </returns>
     internal virtual int GetYStart(
         int yCurrent,
         int top,
@@ -129,7 +179,7 @@ public class KeepAliveService : IHostedService
         if (top > yCurrent - _diameter)
             return top + _diameter;
         if (bottom < yCurrent + _diameter)
-            return bottom + _diameter;
+            return bottom - _diameter;
         return yCurrent;
     }
 
@@ -145,52 +195,36 @@ public class KeepAliveService : IHostedService
     /// <returns>
     ///     True if able to draw a figure eight with the cursor.
     /// </returns>
+    [ExcludeFromCodeCoverage(Justification = "Methods without logic do not require coverage.")]
     internal virtual bool TryDrawFigureEight(
         ref int xStart,
         ref int yStart)
     {
-        var stopWatch = _commonAdapter.StartStopwatch();
-        if (!TryDrawLeftCircle(ref xStart, ref yStart))
-            return false;
-        stopWatch.Stop();
-        Console.WriteLine(stopWatch.Elapsed.TotalSeconds);
-        stopWatch = _commonAdapter.StartStopwatch();
-        if (!TryDrawRightCircle(ref xStart, ref yStart))
-            return false;
-        stopWatch.Stop();
-        Console.WriteLine(stopWatch.Elapsed.TotalSeconds);
-        return true;
-    }
+        const double leftDegreeStart = 0;
+        const double leftDegreeEnd = leftDegreeStart + _circleDegrees;
+        const double rightDegreeStart = 180;
+        const double rightDegreeEnd = rightDegreeStart - _circleDegrees;
+        return TryDrawArc(ref xStart, ref yStart, leftDegreeStart, leftDegreeEnd, true) &&
+               TryDrawArc(ref xStart, ref yStart, rightDegreeStart, rightDegreeEnd, false);
 
-    internal virtual bool TryDrawLeftCircle(
-        ref int xStart,
-        ref int yStart)
-    {
-        const double start = 0;
-        const double degreeEnd = start + _circleDegrees;
-        var result = TryDrawArc(
-            ref xStart,
-            ref yStart,
-            start,
-            degreeEnd,
-            true);
-        return result;
-    }
-
-    internal virtual bool TryDrawRightCircle(
-        ref int xStart,
-        ref int yStart)
-    {
-        const double degreeStart = 180;
-        const double end = degreeStart - _circleDegrees;
-        return TryDrawArc(
-            ref xStart,
-            ref yStart,
-            degreeStart,
-            end,
-            false);
     }
     
+    /// <summary>
+    ///     Attempts to draw an arc with the cursor.
+    /// </summary>
+    /// <param name="degreeStart">
+    ///     The degree of the arc to start at.
+    /// </param>
+    /// <param name="degreeEnd">
+    ///     The degree of the arc to end at.
+    /// </param>
+    /// <param name="clockwise">
+    ///     Indicates if the arc should be drawn clockwise.
+    /// </param>
+    /// <returns>
+    ///     True if able to draw an arc with the cursor.
+    /// </returns>
+    /// <inheritdoc cref="TryDrawFigureEight"/>
     internal virtual bool TryDrawArc(
         ref int xStart,
         ref int yStart,
@@ -208,9 +242,7 @@ public class KeepAliveService : IHostedService
         return true;
         
     }
-
     
-
     /// <summary>
     ///     Attempt to move to the next coordinates.
     /// </summary>
@@ -259,6 +291,7 @@ public class KeepAliveService : IHostedService
     ///     The next coordinates.
     /// </returns>
     /// <inheritdoc cref="TryMoveNext"/>
+    [ExcludeFromCodeCoverage(Justification = "Methods without logic do not require coverage.")]
     internal virtual (double xPosition, double yPosition) GetNext(
         int xCenter,
         int yCenter,
@@ -284,8 +317,12 @@ public class KeepAliveService : IHostedService
     /// <param name="yNew">
     ///     Output of the new y coordinate of the cursor.
     /// </param>
+    /// <param name="stopwatch">
+    ///     Stopwatch used to determine the time to wait between
+    ///     moves.
+    /// </param>
     /// <returns>
-    ///     True if the cursor traveled while waiting.
+    ///     True if the cursor did not travel while waiting.
     /// </returns>
     /// <exception cref="ExternalException">
     ///     Thrown if unable to move the cursor.
@@ -347,10 +384,8 @@ public class KeepAliveService : IHostedService
         ref int xStart,
         ref int yStart)
     {
-        const int activityWaitSeconds = 5;
-        const int activityChecks = 6;
-        var activityWait = new TimeSpan(0, 0, activityWaitSeconds);
-        for (var checks = 0; checks < activityChecks; checks++)
+        var activityWait = new TimeSpan(0, 0, _activityWaitSeconds);
+        for (var checks = 0; checks < _activityChecks; checks++)
         {
             _commonAgent.Wait(activityWait);
             var (xCurrent, yCurrent) = GetCursorPosition();
@@ -371,6 +406,7 @@ public class KeepAliveService : IHostedService
     /// </returns>
     /// <inheritdoc cref="WaitForInActivity"/>
     /// <inheritdoc cref="TryMove"/>
+    [ExcludeFromCodeCoverage(Justification = "Methods without logic do not require coverage.")]
     internal virtual bool DidTravel(
         int xStart,
         int yStart,

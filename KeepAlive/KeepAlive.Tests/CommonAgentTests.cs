@@ -1,34 +1,22 @@
+using Moq;
+
 namespace KeepAlive.Tests;
 
 [TestClass]
 public class CommonAgentTests
 {
-    [TestMethod]
-    public void AbsoluteSum_ShouldReturnAbsoluteSum()
+    private static Mock<ICommonAdapter> _commonAdapterMock = null!;
+
+    [ClassInitialize]
+    public static void ClassInitialize(
+        TestContext context)
     {
+        _commonAdapterMock = new Mock<ICommonAdapter>();
     }
 
-    [TestMethod]
-    public void ConvertToRadian_ShouldReturnRadians()
+    [TestInitialize]
+    public void TestInitialize()
     {
-
-    }
-
-    [TestMethod]
-    public void RoundDown_ShouldReturnValueRoundedDown()
-    {
-
-    }
-
-    [TestMethod]
-    public void WaitTicks_ShouldWaitSpecifiedTicks()
-    {
-
-    }
-
-    [TestMethod]
-    public void WaitWaitTime_ShouldCallWaitTicks()
-    {
-
+        _commonAdapterMock.Reset();
     }
 }

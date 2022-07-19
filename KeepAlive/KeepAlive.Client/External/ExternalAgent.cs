@@ -31,7 +31,7 @@ public class ExternalAgent : IExternalAgent
     public virtual string? GetErrorMessage()
     {
         const int bufferCapacity = 512;
-        var messageId = Marshal.GetLastWin32Error();
+        var messageId = _adapter.GetLastWin32Error();
         var buffer = new StringBuilder(bufferCapacity);
         return FormatMessage(messageId, buffer) == 0 ?
             null :
@@ -90,12 +90,11 @@ public class ExternalAgent : IExternalAgent
         out Rectangle workArea)
     {
         workArea = new Rectangle();
-        if (!TryGetMonitorHandleFromPosition(
-                xPosition,
-                yPosition,
-                out var monitorHandle))
-            return false;
-        var monitorInfo = new MonitorInfo();
+        var monitorHandle = GetMonitorHandleFromPosition(
+            xPosition,
+            yPosition);
+        var monitorInfo = new MonitorInfo(
+            (uint)_adapter.SizeOf<MonitorInfo>());
         if (!_adapter.TryGetMonitorInfo(monitorHandle, ref monitorInfo))
             return false;
         workArea = monitorInfo.WorkArea;
@@ -103,7 +102,7 @@ public class ExternalAgent : IExternalAgent
     }
 
     /// <summary>
-    ///     Attempts to get the monitor handle from the position.
+    ///     Gets the monitor handle from the position.
     /// </summary>
     /// <param name="xPosition">
     ///     The x-axis coordinate to find the monitor from.
@@ -111,23 +110,20 @@ public class ExternalAgent : IExternalAgent
     /// <param name="yPosition">
     ///     The y-axis coordiante to find the monitor from.
     /// </param>
-    /// <param name="monitorHandle">
-    ///     Output of the handle to the found monitor.
-    /// </param>
     /// <returns>
-    ///     True if able to get the monitor handle from the position.
+    ///     The monitor handle of either the position that is within the
+    ///     bounds of the monitor, or the nearest monitor.
     /// </returns>
-    internal virtual bool TryGetMonitorHandleFromPosition(
+    [ExcludeFromCodeCoverage(Justification = "Methods without logic do not require coverage.")]
+    internal virtual IntPtr GetMonitorHandleFromPosition(
         int xPosition,
-        int yPosition,
-        out IntPtr monitorHandle)
+        int yPosition)
     {
         const MonitorFromPointFlag flags = MonitorFromPointFlag.DefaultToNearest;
         var position = new Position(xPosition, yPosition);
-        monitorHandle = _adapter.GetMonitorFromPosition(
+        return _adapter.GetMonitorFromPosition(
             position,
             flags);
-        return monitorHandle != IntPtr.Zero;
     }
 
     /// <inheritdoc cref="IExternalAgent.TryMoveCursor"/>
@@ -249,6 +245,6 @@ public class ExternalAgent : IExternalAgent
         return _adapter.SendInputs(
             (uint)inputs.Length,
             inputs,
-            Marshal.SizeOf<Input>());
+            _adapter.SizeOf<Input>());
     }
 }
