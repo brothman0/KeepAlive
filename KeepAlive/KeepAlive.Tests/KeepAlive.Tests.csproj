@@ -13,7 +13,6 @@
 		<PackageReference Include="coverlet.collector" Version="3.1.2" />
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\KeepAlive.Client\KeepAlive.csproj" />
 		<ProjectReference Include="..\KeepAlive\KeepAlive.csproj" />
 	</ItemGroup>
 	<ItemGroup>

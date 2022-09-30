@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Text;
 using KeepAlive.External.Resources.FormatMessage;
+using KeepAlive.External.Resources.GetLastInputInfo;
 using KeepAlive.External.Resources.GetSystemMetric;
 using KeepAlive.External.Resources.GetMonitorFromPoint;
 using KeepAlive.External.Resources.SendInputs;
@@ -248,5 +249,20 @@ public class ExternalAgent : IExternalAgent
             (uint)inputs.Length,
             inputs,
             _adapter.SizeOf<Input>());
+    }
+    
+    /// <inheritdoc cref="IExternalAgent.TryGetIdleTime"/>
+    public virtual bool TryGetIdleTime(
+        [NotNullWhen(true)]
+        out TimeSpan? idleTime)
+    {
+        idleTime = null;
+        var lastInputInfo = new LastInputInfo(
+            (uint)_adapter.SizeOf<LastInputInfo>());
+        if (!_adapter.TryGetLastInputInfo(ref lastInputInfo))
+            return false;
+        idleTime = TimeSpan.FromMilliseconds(
+            Environment.TickCount - lastInputInfo.Ticks);
+        return true;
     }
 }

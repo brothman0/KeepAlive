@@ -85,4 +85,17 @@ public interface IExternalAgent
     public bool TryRelocateCursor(
         int xPosition,
         int yPosition);
+
+    /// <summary>
+    ///     Attempts to get the idle time.
+    /// </summary>
+    /// <param name="idleTime">
+    ///     The idle time to get.
+    /// </param>
+    /// <returns>
+    ///     True if able to get the idle time.
+    /// </returns>
+    bool TryGetIdleTime(
+        [NotNullWhen(true)]
+        out TimeSpan? idleTime);
 }

@@ -1,7 +1,9 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 using KeepAlive.External;
 using Microsoft.Extensions.Hosting;
+using ExternalException = KeepAlive.External.ExternalException;
 
 namespace KeepAlive;
 
@@ -76,6 +78,10 @@ public class KeepAliveService : IHostedService
                     ref yStart);
     }
 
+    //TODO: Integrate a means of using TryGetIdleTime to determine idle time
+    //TODO: After every period of inactivity that the figure eight starts it should be determined if the mouse should be moved.
+    //TODO: use y = +/- 1/4 sqrt(16 x^2 - x^4)  or x^4 = 16 (x^2 - y^2) to generate the figure eight
+    //TODO: calculate, based on the figure eight size, how many moves are actually required and adjust the wait time between moves accordingly
     /// <summary>
     ///     Gets the coordinates to start the figure eight from.
     /// </summary>
@@ -105,7 +111,7 @@ public class KeepAliveService : IHostedService
     /// <returns>
     ///     The work area for the monitor the cursor is in.
     /// </returns>
-    /// <exception cref="ExternalException">
+    /// <exception cref="External.ExternalException">
     ///     Thrown if unable to get the cursor work area.
     /// </exception>
     internal virtual (int left, int top, int right, int bottom) GetCursorWorkArea(

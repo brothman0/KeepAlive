@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Text;
 using KeepAlive.External.Resources.FormatMessage;
+using KeepAlive.External.Resources.GetLastInputInfo;
 using KeepAlive.External.Resources.GetSystemMetric;
 using KeepAlive.External.Resources.GetMonitorFromPoint;
 using KeepAlive.External.Resources.SendInputs;
@@ -100,6 +101,14 @@ public sealed class ExternalAdapter : IExternalAdapter
             ref monitorInfo);
     }
 
+    /// <inheritdoc cref="IExternalAdapter.TryGetLastInputInfo"/>
+    public bool TryGetLastInputInfo(
+        ref LastInputInfo lastInputInfo)
+    {
+        return ExternalGetLastInputInfo(
+            ref lastInputInfo);
+    }
+
     /// <inheritdoc cref="IExternalAdapter.FormatMessage"/>
     [DllImport("Kernel32.dll", EntryPoint = "FormatMessage", SetLastError = true, CharSet = CharSet.Unicode)]
     private static extern uint ExternalFormatMessage(
@@ -145,4 +154,10 @@ public sealed class ExternalAdapter : IExternalAdapter
     private static extern bool ExternalTryGetMonitorInfo(
         IntPtr monitorHandle,
         ref MonitorInfo monitorInfo);
+
+    /// <inheritdoc cref="IExternalAdapter.TryGetLastInputInfo"/>
+    [DllImport("user32.dll", SetLastError = true, EntryPoint = "GetLastInputInfo")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool ExternalGetLastInputInfo(
+        ref LastInputInfo lastInputInfo);
 }

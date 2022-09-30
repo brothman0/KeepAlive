@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using System.Runtime.InteropServices;
 using KeepAlive.External.Resources.FormatMessage;
+using KeepAlive.External.Resources.GetLastInputInfo;
 using KeepAlive.External.Resources.GetSystemMetric;
 using KeepAlive.External.Resources.GetMonitorFromPoint;
 using KeepAlive.External.Resources.SendInputs;
@@ -138,8 +139,22 @@ public interface IExternalAdapter
     ///     Output of the monitor info for the monitor with a handle of
     ///     <paramref name="monitorHandle"/>.
     /// </param>
-    /// <returns></returns>
+    /// <returns>
+    ///     True if able to get the monitor info.
+    /// </returns>
     bool TryGetMonitorInfo(
         IntPtr monitorHandle,
         ref MonitorInfo monitorInfo);
+
+    /// <summary>
+    ///     Attempt to get the last input info.
+    /// </summary>
+    /// <param name="lastInputInfo">
+    ///     Output of the last input info.
+    /// </param>
+    /// <returns>
+    ///     True if able to get the last input info.
+    /// </returns>
+    bool TryGetLastInputInfo(
+        ref LastInputInfo lastInputInfo);
 }
