@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection.Metadata.Ecma335;
 using System.Runtime.InteropServices;
 using KeepAlive.External;
 using Microsoft.Extensions.Hosting;
@@ -7,14 +8,236 @@ using ExternalException = KeepAlive.External.ExternalException;
 
 namespace KeepAlive;
 
+public class LemniscateConfig :
+    ILemniscateConfig
+{
+    public int HalfWidth { get; init; }
+
+    public int PixelIncrement { get; init; }
+
+    public int Width => HalfWidth * 2;
+
+    public LemniscateConfig(
+        int halfWidth,
+        int pixelIncrement)
+    {
+        HalfWidth = halfWidth;
+        PixelIncrement = pixelIncrement;
+    }
+}
+
+public interface ILemniscateConfig
+{
+    int HalfWidth { get; init; }
+
+    int PixelIncrement { get; init; }
+
+    int Width { get; }
+}
+
+public interface IKeepAliveConfig
+{
+    int InactivityThreshold { get; init; }
+
+    int TargetTicks { get; init; }
+}
+
+public interface IDrawingAgent
+{
+    bool Draw();
+}
+
+
+public class LemniscateDrawingAgent : IDrawingAgent
+{
+    internal readonly ILemniscateConfig _config;
+    internal readonly ICommonAdapter _commonAdapter;
+    internal readonly ICommonAgent _commonAgent;
+    internal readonly IExternalAgent _externalAgent;
+    internal readonly Func<bool> _isActive;
+
+
+    [ExcludeFromCodeCoverage(Justification = "Auto properties do not require coverage.")]
+    public virtual bool IsRunning { get; set; } = true;
+
+    public LemniscateDrawingAgent(
+        IKeepAliveService keepAliveService,
+        ICommonAdapter commonAdapter,
+        ICommonAgent commonAgent,
+        IExternalAgent externalAgent,
+        ILemniscateConfig config)
+    {
+        _isActive = keepAliveService.IsActive;
+        _commonAdapter = commonAdapter;
+        _commonAgent = commonAgent;
+        _externalAgent = externalAgent;
+        _config = config;
+    }
+
+    public virtual bool Draw()
+    {
+        var (xStart, yStart) = GetStart();
+
+        return true;
+    }
+
+    /// <summary>
+    ///     Gets the coordinates to start the figure eight from.
+    /// </summary>
+    /// <returns>
+    ///     The coordinates to start the figure eight from.
+    /// </returns>
+    [ExcludeFromCodeCoverage(Justification = "Methods without logic do not require coverage.")]
+    internal virtual (int xStart, int yStart) GetStart()
+    {
+        var (xCurrent, yCurrent) = GetCursorPosition();
+        var (left, top, right, bottom) = GetCursorWorkArea(xCurrent, yCurrent);
+        var xStart = GetXStart(xCurrent, left, right);
+        var yStart = GetYStart(yCurrent, top, bottom);
+        RelocateCursor(xStart, yStart);
+        return (xStart, yStart);
+    }
+
+    /// <summary>
+    ///     Gets the current cursor position.
+    /// </summary>
+    /// <returns>
+    ///     The current cursor position.
+    /// </returns>
+    /// <exception cref="ExternalException">
+    ///     Thrown if unable to get the cursor position.
+    /// </exception>
+    internal virtual (int xPosition, int yPosition) GetCursorPosition()
+    {
+        if (!_externalAgent.TryGetCursorPosition(
+                out var xPosition,
+                out var yPosition))
+            throw new ExternalException(
+                _externalAgent,
+                "Unable to get the cursor position.");
+        return (xPosition.Value, yPosition.Value);
+    }
+
+    /// <summary>
+    ///     Gets the work area for the monitor the cursor is in.
+    /// </summary>
+    /// <param name="xPosition">
+    ///     The coordinate of the cursor along the x-axis.
+    /// </param>
+    /// <param name="yPosition">
+    ///     The coordinate of the cursor along the y-axis.
+    /// </param>
+    /// <returns>
+    ///     The work area for the monitor the cursor is in.
+    /// </returns>
+    /// <exception cref="External.ExternalException">
+    ///     Thrown if unable to get the cursor work area.
+    /// </exception>
+    internal virtual (int left, int top, int right, int bottom) GetCursorWorkArea(
+        int xPosition,
+        int yPosition)
+    {
+        if (!_externalAgent.TryGetCursorWorkArea(
+                xPosition,
+                yPosition,
+                out var workArea))
+            throw new ExternalException(
+                _externalAgent,
+                "Unable to get the cursor work area.");
+        return (workArea.Left, workArea.Top, workArea.Right, workArea.Bottom);
+    }
+
+    /// <summary>
+    ///     Gets the starting position of the cursor along the x-axis such that
+    ///     the cursor will not intersect the bounds of the work area when drawing
+    ///     the figure eight.
+    /// </summary>
+    /// <param name="xCurrent">
+    ///     The current position of the cursor along the x-axis.
+    /// </param>
+    /// <param name="left">
+    ///     The coordinate along the x-axis that describes the left bound of the
+    ///     work area.
+    /// </param>
+    /// <param name="right">
+    ///     The coordinate along the x-axis that describes the right bound of the
+    ///     work area.
+    /// </param>
+    /// <returns>
+    ///     The starting position along the x-axis for the figure eight.
+    /// </returns>
+    internal virtual int GetXStart(
+        int xCurrent,
+        int left,
+        int right)
+    {
+        if (left > xCurrent - _config.Width)
+            return left + _config.Width;
+        if (right < xCurrent + _config.Width)
+            return right - _config.Width;
+        return xCurrent;
+    }
+
+    /// <summary>
+    ///     Gets the starting position of the cursor along the y-axis such that
+    ///     the cursor will not intersect the bounds of the work area when drawing
+    ///     the figure eight.
+    /// </summary>
+    /// <param name="yCurrent">
+    ///     The current position of the cursor along the y-axis.
+    /// </param>
+    /// <param name="top">
+    ///     The coordinate along the y-axis that describes the top bound of the
+    ///     work area.
+    /// </param>
+    /// <param name="bottom">
+    ///     The coordinate along the y-axis that describes the bottom bound of the
+    ///     work area.
+    /// </param>
+    /// <returns>
+    ///     The starting position along the y-axis for the figure eight.
+    /// </returns>
+    internal virtual int GetYStart(
+        int yCurrent,
+        int top,
+        int bottom)
+    {
+        if (top > yCurrent - _diameter)
+            return top + _diameter;
+        if (bottom < yCurrent + _diameter)
+            return bottom - _diameter;
+        return yCurrent;
+    }
+
+    internal virtual void RelocateCursor(
+        int xPosition,
+        int yPosition)
+    {
+        if (!_externalAgent.TryRelocateCursor(
+                xPosition,
+                yPosition))
+            throw new ExternalException(
+                _externalAgent,
+                "Unable to relocate the cursor.");
+    }
+}
+
+public interface IKeepAliveService : IHostedService
+{
+    public bool IsRunning { get; set; }
+
+    public bool IsActive();
+}
+
 /// <summary>
 ///     Keeps the host machine alive.
 /// </summary>
-public class KeepAliveService : IHostedService
+public class KeepAliveService : IKeepAliveService
 {
     internal readonly ICommonAdapter _commonAdapter;
     internal readonly ICommonAgent _commonAgent;
     internal readonly IExternalAgent _externalAgent;
+    internal readonly IKeepAliveConfig _config;
     internal const int _radius = 100;
     internal const int _diameter = _radius * 2;
     internal const double _circleDegrees = 360;
@@ -45,11 +268,13 @@ public class KeepAliveService : IHostedService
     public KeepAliveService(
         ICommonAdapter commonAdapter,
         ICommonAgent commonAgent,
-        IExternalAgent externalAgent)
+        IExternalAgent externalAgent,
+        IKeepAliveConfig config)
     {
         _commonAdapter = commonAdapter;
         _commonAgent = commonAgent;
         _externalAgent = externalAgent;
+        _config = config;
     }
 
     /// <inheritdoc cref="IHostedService.StartAsync(CancellationToken)"/>
@@ -60,6 +285,11 @@ public class KeepAliveService : IHostedService
         var factory = new TaskFactory(cancellationToken);
         _ = factory.StartNew(KeepAlive, cancellationToken);
         return Task.CompletedTask;
+    }
+
+    public virtual bool IsActive()
+    {
+        return false;
     }
 
     /// <summary>
@@ -97,6 +327,11 @@ public class KeepAliveService : IHostedService
         var yStart = GetYStart(yCurrent, top, bottom);
         RelocateCursor(xStart, yStart);
         return (xStart, yStart);
+    }
+
+    internal virtual (int xStart, int yStart) GetStart2()
+    {
+
     }
 
     /// <summary>
